@@ -1,0 +1,6 @@
+*.bg filter=lfs diff=lfs merge=lfs -text
+*.en filter=lfs diff=lfs merge=lfs -text
+NMTmodel filter=lfs diff=lfs merge=lfs -text
+NMTmodel.optim filter=lfs diff=lfs merge=lfs -text
+bpe_codes filter=lfs diff=lfs merge=lfs -text
+wordsData filter=lfs diff=lfs merge=lfs -text
