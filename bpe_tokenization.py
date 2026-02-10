@@ -4,7 +4,7 @@ from common import progressBar
 
 
 def saveBpeCodes(codes, fileName):
-    # Записва научените BPE правила за сливане в текстов файл.
+    # Записва научените BPE правила за сливане в текстов файл
     # Всеки ред съдържа двата елемента за слизване
     with open(fileName, "w") as f:
         for a, b in codes:
@@ -12,7 +12,7 @@ def saveBpeCodes(codes, fileName):
 
 
 def loadBpeCodes(fileName):
-    # Зарежда BPE правилата от файл.
+    # Зарежда BPE правилата от файл
     # Връща списък от двойки, подредени по ред на сливане и лексикографски
     codes = []
     with open(fileName, "r") as f:
@@ -27,7 +27,7 @@ def loadBpeCodes(fileName):
 
 
 def _merge_pair(word, pair):
-    # Слива всички срещания на дадена двойка символи в дума.
+    # Слива всички срещания на дадена двойка символи в дума
     merged = []
     i = 0
     while i < len(word):
@@ -41,13 +41,13 @@ def _merge_pair(word, pair):
 
 
 def learnBpe(corpus, numMerges):
-    # Обучава BPE върху корпуса, като извършва numMerges сливания.
+    # Обучава BPE върху корпуса, като извършва numMerges сливания
     word_counts = Counter()
     for sent in corpus:
         for w in sent:
             word_counts[w] += 1
 
-    # Представяме всяка дума като символи + край на дума </w>.
+    # Представяме всяка дума като символи + край на дума </w>
     word_freq = {tuple(list(w) + ["</w>"]): c for w, c in word_counts.items()}
     word_pairs = {}
     pair_counts = Counter()
@@ -57,8 +57,8 @@ def learnBpe(corpus, numMerges):
     pq = []
 
     for word, freq in word_freq.items():
-        # Инициализира броя на всички двойки в думата.
-        # pair_to_words пази кои думи съдържат дадена двойка.
+        # Инициализира броя на всички двойки в думата
+        # pair_to_words пази кои думи съдържат дадена двойка
         pairs = []
         for i in range(len(word) - 1):
             p = (word[i], word[i + 1])
@@ -198,8 +198,8 @@ def applyBpe(corpus, codes):
 
 
 def decodeBpe(tokens):
-    # Възстановява думите от BPE токени с маркер @@.
-    # Слепя последователните поддуми до цяла дума.
+    # Възстановява думите от BPE токени с маркер @@
+    # Слепя последователните поддуми до цяла дума
     words = []
     current = ""
     for tok in tokens:

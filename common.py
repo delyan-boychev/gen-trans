@@ -1,5 +1,6 @@
 import sys
 
+
 class progressBar:
     def __init__(self, barWidth=50):
         self.barWidth = barWidth
@@ -20,4 +21,3 @@ class progressBar:
 
     def stop(self):
         sys.stdout.write("]\n")
-

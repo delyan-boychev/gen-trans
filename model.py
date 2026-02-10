@@ -132,7 +132,7 @@ class Transformer_cell(torch.nn.Module):
 
         z3 = self.W2(
             self.dropout_2(torch.nn.functional.relu(self.W1(z2)))
-        )  ## Feed Forward
+        )  # Feed Forward
         y = self.layer_norm_2(z2 + self.dropout_3(z3))
 
         return y, new_cache
@@ -246,13 +246,13 @@ class LanguageModel(nn.Module):
         return self
 
     def _reorder_cache(self, cache, indices):
-        # Пренарежда KV кеша според индексите.
+        # Пренарежда KV кеша според индексите
         return [
             (k.index_select(0, indices), v.index_select(0, indices)) for k, v in cache
         ]
 
     def _greedy_search(self, seq, cache, last_logits, limit, device):
-        # Алчно или greedy декодиране: избира най-вероятния токен.
+        # Алчно или greedy декодиране,което избира най-вероятния токен
         next_token = torch.argmax(last_logits, dim=-1).item()
         seq.append(next_token)
         if next_token == self.endTokenIdx:
@@ -271,7 +271,7 @@ class LanguageModel(nn.Module):
         return seq
 
     def _beam_search(self, seq, cache, last_logits, limit, beam_width, device):
-        # Beam Search декодиране с нормализация по дължина.
+        # Beam Search декодиране с нормализация по дължина
         base_len = len(seq)
 
         def length_normalize(raw_score: float, total_len: int) -> float:

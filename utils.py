@@ -28,9 +28,9 @@ def setSeed(seed: int = 42):
 
 
 def readCorpus(fileName):
-    ### Чете файл от изречения разделени с нов ред `\n`.
-    ### fileName е името на файла, съдържащ корпуса
-    ### връща списък от изречения, като всяко изречение е списък от думи
+    # Чете файл от изречения разделени с нов ред `\n`
+    # fileName е името на файла, съдържащ корпуса
+    # връща списък от изречения, като всяко изречение е списък от думи
     print("Loading file:", fileName)
     return [nltk.word_tokenize(line) for line in open(fileName)]
 
@@ -76,7 +76,7 @@ def prepareData(
     sourceCorpus = readCorpus(sourceFileName)
     targetCorpus = readCorpus(targetFileName)
     if useBpe:
-        # Ако правилата вече са записани, не ги преизчисляваме.
+        # Ако правилата вече са записани, не ги преизчисляваме
         if os.path.exists(bpeCodesFile):
             codes = loadBpeCodes(bpeCodesFile)
         else:
