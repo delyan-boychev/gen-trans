@@ -131,7 +131,7 @@ def learnBpe(corpus, numMerges):
 
 
 def _apply_bpe_to_word(word, codes_dict, cache):
-    # Проверка в кеша преди да я представим като bpe кодове
+    # Проверка в кеша преди да я представим като отделни токени
     if word in cache:
         return cache[word]
 

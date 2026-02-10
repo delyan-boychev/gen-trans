@@ -76,7 +76,7 @@ def prepareData(
     sourceCorpus = readCorpus(sourceFileName)
     targetCorpus = readCorpus(targetFileName)
     if useBpe:
-        # Ако кодовете вече са записани, не ги преизчисляваме.
+        # Ако правилата вече са записани, не ги преизчисляваме.
         if os.path.exists(bpeCodesFile):
             codes = loadBpeCodes(bpeCodesFile)
         else:
