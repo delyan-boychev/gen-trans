@@ -240,8 +240,10 @@ class LanguageModel(nn.Module):
     def save(self, fileName):
         torch.save(self.state_dict(), fileName)
 
-    def load(self, fileName):
-        self.load_state_dict(torch.load(fileName))
+    def load(self, fileName, map_location="cpu"):
+        state = torch.load(fileName, map_location=map_location, weights_only=True)
+        self.load_state_dict(state)
+        return self
 
     def _reorder_cache(self, cache, indices):
         # Пренарежда KV кеша според индексите.
