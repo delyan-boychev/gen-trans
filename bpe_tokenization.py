@@ -4,16 +4,16 @@ from common import progressBar
 
 
 def saveBpeCodes(codes, fileName):
-    # Записва научените BPE слети двойки в текстов файл.
-    # Формат: всяка линия съдържа два елемента на двойката.
+    # Записва научените BPE правила за сливане в текстов файл.
+    # Всеки ред съдържа двата елемента за слизване
     with open(fileName, "w") as f:
         for a, b in codes:
             f.write(a + " " + b + "\n")
 
 
 def loadBpeCodes(fileName):
-    # Зарежда BPE слетите двойки от файл.
-    # Връща списък от двойки (tuple), подредени по азбучен ред
+    # Зарежда BPE правилата от файл.
+    # Връща списък от двойки, подредени по ред на сливане и лексикографски
     codes = []
     with open(fileName, "r") as f:
         for line in f:
@@ -28,7 +28,6 @@ def loadBpeCodes(fileName):
 
 def _merge_pair(word, pair):
     # Слива всички срещания на дадена двойка символи в дума.
-    # Входът е дума като списък/tuple от символи.
     merged = []
     i = 0
     while i < len(word):
@@ -43,7 +42,6 @@ def _merge_pair(word, pair):
 
 def learnBpe(corpus, numMerges):
     # Обучава BPE върху корпуса, като извършва numMerges сливания.
-    # Използва оптимизация с инкрементални обновявания на броячи.
     word_counts = Counter()
     for sent in corpus:
         for w in sent:
@@ -77,17 +75,17 @@ def learnBpe(corpus, numMerges):
     pb.start(numMerges)
 
     for _ in range(numMerges):
-        # Избира най-честата двойка и обновява само засегнатите думи.
+        # Избира най-честата двойка и обновява само засегнатите думи
         best = None
         while pq:
             # Вадим най-честото (най-малкото отрицателно число)
             neg_count, pair = heapq.heappop(pq)
 
-            # Ако pair_counts[pair] се е променило, значи този запис в heap-а е стар.
+            # Ако pair_counts[pair] се е променило, значи този запис в heap-а е стар (понеже не ги трием, защото е доста бавно)
             if pair_counts[pair] == -neg_count:
                 best = pair
                 break
-            # Ако не съвпада, просто цикълът се върти пак и вади следващия.
+            # Ако не съвпада, просто цикълът се върти пак и вади следващия
 
         if not best:  # Ако хийпът е празен или няма валидни
             break
