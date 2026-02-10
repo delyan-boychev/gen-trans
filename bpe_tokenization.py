@@ -55,7 +55,7 @@ def learnBpe(corpus, numMerges):
     pair_counts = Counter()
     pair_to_words = {}
 
-    # Пазим наредените двойки от (-честота, наредена двойка деца)
+    # Пазим наредените двойки от (-честота, двойка от токени)
     pq = []
 
     for word, freq in word_freq.items():
@@ -150,7 +150,7 @@ def _apply_bpe_to_word(word, codes_dict, cache):
 
         for i in range(len(symbols) - 1):
             pair = (symbols[i], symbols[i + 1])
-            rank = codes_dict.get(pair)  # .get е безопасно и бързо
+            rank = codes_dict.get(pair)
             if rank is not None and rank < min_rank:
                 min_rank = rank
                 best_pair = pair
@@ -158,7 +158,6 @@ def _apply_bpe_to_word(word, codes_dict, cache):
         if best_pair is None:
             break
 
-        # Тук използваме _merge_pair (приемаме, че го имаш от предишния код)
         symbols = list(_merge_pair(tuple(symbols), best_pair))
 
     output = []
@@ -167,7 +166,6 @@ def _apply_bpe_to_word(word, codes_dict, cache):
         if sym == "</w>":
             continue
 
-        # Бързо премахване на маркера без slicing ако е в края
         clean_sym = sym.replace("</w>", "")
 
         # Логика за @@
@@ -180,7 +178,7 @@ def _apply_bpe_to_word(word, codes_dict, cache):
         else:
             output.append(clean_sym + "@@")
 
-    # Записваме в кеша преди да върнем
+    # Записваме в кеша преди да върнем кодираната дума
     cache[word] = output
     return output
 

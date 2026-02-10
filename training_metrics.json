@@ -1,0 +1,142 @@
+[
+    {
+        "epoch": 1,
+        "val_perplexity": 22.56824902921819,
+        "avg_train_loss": 5.11354057195343,
+        "avg_grad_norm": 0.8286295990544708,
+        "learning_rate": 0.0004979916999520137
+    },
+    {
+        "epoch": 2,
+        "val_perplexity": 17.800952319095646,
+        "avg_train_loss": 4.07674444199395,
+        "avg_grad_norm": 0.8691091438099197,
+        "learning_rate": 0.0004898913342024
+    },
+    {
+        "epoch": 3,
+        "val_perplexity": 16.278038309983206,
+        "avg_train_loss": 3.9434379250123777,
+        "avg_grad_norm": 0.9130330259080379,
+        "learning_rate": 0.00047577705535359685
+    },
+    {
+        "epoch": 4,
+        "val_perplexity": 15.429351234935847,
+        "avg_train_loss": 3.878100816647786,
+        "avg_grad_norm": 0.9482364335646631,
+        "learning_rate": 0.00045600343783804785
+    },
+    {
+        "epoch": 5,
+        "val_perplexity": 14.872755932029571,
+        "avg_train_loss": 3.8330429871755944,
+        "avg_grad_norm": 0.9764731423608188,
+        "learning_rate": 0.00043106722819751924
+    },
+    {
+        "epoch": 6,
+        "val_perplexity": 14.347765932089517,
+        "avg_train_loss": 3.7975630454361724,
+        "avg_grad_norm": 1.0029682971555653,
+        "learning_rate": 0.00040159486597419715
+    },
+    {
+        "epoch": 7,
+        "val_perplexity": 13.936319662933258,
+        "avg_train_loss": 3.766303151042036,
+        "avg_grad_norm": 1.0289018238688379,
+        "learning_rate": 0.0003683267464953785
+    },
+    {
+        "epoch": 8,
+        "val_perplexity": 13.660147352272698,
+        "avg_train_loss": 3.736877383691123,
+        "avg_grad_norm": 1.0582834752564578,
+        "learning_rate": 0.00033209862089711174
+    },
+    {
+        "epoch": 9,
+        "val_perplexity": 13.315711762659049,
+        "avg_train_loss": 3.7087040031929157,
+        "avg_grad_norm": 1.0894935638761334,
+        "learning_rate": 0.0002938206006494664
+    },
+    {
+        "epoch": 10,
+        "val_perplexity": 13.042763905603865,
+        "avg_train_loss": 3.6804418158365935,
+        "avg_grad_norm": 1.1237827183892624,
+        "learning_rate": 0.00025445429402512937
+    },
+    {
+        "epoch": 11,
+        "val_perplexity": 12.826990458144008,
+        "avg_train_loss": 3.6515281787487854,
+        "avg_grad_norm": 1.1622455629893906,
+        "learning_rate": 0.00021498864888164825
+    },
+    {
+        "epoch": 12,
+        "val_perplexity": 12.495328596908797,
+        "avg_train_loss": 3.6225334675831116,
+        "avg_grad_norm": 1.2023954519037245,
+        "learning_rate": 0.0001764151086273099
+    },
+    {
+        "epoch": 13,
+        "val_perplexity": 12.2023713553915,
+        "avg_train_loss": 3.5930065357155367,
+        "avg_grad_norm": 1.2451014312780755,
+        "learning_rate": 0.0001397027054945899
+    },
+    {
+        "epoch": 14,
+        "val_perplexity": 12.05552634177602,
+        "avg_train_loss": 3.5633342311624205,
+        "avg_grad_norm": 1.2889142781443075,
+        "learning_rate": 0.0001057737168200435
+    },
+    {
+        "epoch": 15,
+        "val_perplexity": 11.84492221888553,
+        "avg_train_loss": 3.534424417836235,
+        "avg_grad_norm": 1.3306653055058142,
+        "learning_rate": 7.548049588584514e-05
+    },
+    {
+        "epoch": 16,
+        "val_perplexity": 11.751539473419346,
+        "avg_train_loss": 3.5067663632414816,
+        "avg_grad_norm": 1.3681212687382187,
+        "learning_rate": 4.958405937123205e-05
+    },
+    {
+        "epoch": 17,
+        "val_perplexity": 11.657517068181773,
+        "avg_train_loss": 3.4816532441752415,
+        "avg_grad_norm": 1.3978211003353365,
+        "learning_rate": 2.8734969333081046e-05
+    },
+    {
+        "epoch": 18,
+        "val_perplexity": 11.599738684359544,
+        "avg_train_loss": 3.4603640178884625,
+        "avg_grad_norm": 1.416725457286733,
+        "learning_rate": 1.3456989992451143e-05
+    },
+    {
+        "epoch": 19,
+        "val_perplexity": 11.596282207921409,
+        "avg_train_loss": 3.4444191496867993,
+        "avg_grad_norm": 1.4248861679605347,
+        "learning_rate": 4.1339298960961505e-06
+    },
+    {
+        "epoch": 20,
+        "val_perplexity": 11.584841710853006,
+        "avg_train_loss": 3.435155155324756,
+        "avg_grad_norm": 1.4255156600513452,
+        "learning_rate": 1e-06
+    }
+]
