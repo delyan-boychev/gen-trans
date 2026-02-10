@@ -4,30 +4,24 @@ import os
 
 
 def visualize_metrics(json_file="training_metrics.json", output_dir="plots"):
-    # Check if JSON file exists
     if not os.path.exists(json_file):
         print(f"Error: {json_file} not found.")
         return
 
-    # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Load data
     with open(json_file, "r") as f:
         data = json.load(f)
 
-    # Extract metrics
     epochs = [entry["epoch"] for entry in data]
     perplexities = [entry["val_perplexity"] for entry in data]
     losses = [entry["avg_train_loss"] for entry in data]
     lrs = [entry["learning_rate"] for entry in data]
     grad_norms = [entry["avg_grad_norm"] for entry in data]
 
-    # Set larger font size
     plt.rcParams.update({"font.size": 14})
 
-    # Plot Validation Perplexity
     plt.figure(figsize=(10, 6))
     plt.plot(epochs, perplexities, marker="o", linestyle="-", color="b")
     plt.title("Перплексия върху validation set")
