@@ -9,6 +9,7 @@
 #############################################################################
 
 import sys
+import os
 import numpy as np
 import torch
 import math
@@ -51,7 +52,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "prepare":
         bpe_merges,
         bpe_codes_file,
     )
-    # Convert to indices for storage (legacy compatibility)
+
     trainCorpus = [[word2ind.get(w, unkTokenIdx) for w in s] for s in trainCorpus]
     devCorpus = [[word2ind.get(w, unkTokenIdx) for w in s] for s in devCorpus]
     pickle.dump((trainCorpus, devCorpus), open(corpusFileName, "wb"))
@@ -62,11 +63,6 @@ if len(sys.argv) > 1 and (sys.argv[1] == "train" or sys.argv[1] == "extratrain")
     utils.setSeed()
     (trainCorpus, devCorpus) = pickle.load(open(corpusFileName, "rb"))
     word2ind = pickle.load(open(wordsFileName, "rb"))
-
-    # Helper to convert indices back to words for the new model if needed,
-    # but here we pass indices to perplexity which expects indices.
-    # Wait, perplexity function calls nmt(batch). nmt forward expects indices.
-    # So devCorpus (indices) is correct.
 
     nmt = model.LanguageModel(len(word2ind), d_model, n_heads, n_layers, dropout).to(
         device
@@ -79,7 +75,7 @@ if len(sys.argv) > 1 and (sys.argv[1] == "train" or sys.argv[1] == "extratrain")
     steps_per_epoch = math.ceil(len(trainCorpus) / batchSize)
     total_steps = maxEpochs * steps_per_epoch
     warmup_steps = max(1, int(0.2 * steps_per_epoch))
-
+    # добавяме си Learning Rate scheduler
     warmup = torch.optim.lr_scheduler.LinearLR(
         optimizer,
         start_factor=lr_min / learning_rate,
@@ -105,13 +101,10 @@ if len(sys.argv) > 1 and (sys.argv[1] == "train" or sys.argv[1] == "extratrain")
             modelFileName + ".optim"
         )
         optimizer.load_state_dict(osd)
-        # Load metrics log if exists
-        try:
+        # Зареждаме файла за логване на метриките, ако съществува:
+        if os.path.exists("training_metrics.json"):
             with open("training_metrics.json", "r") as f:
                 metrics_log = json.load(f)
-        except FileNotFoundError:
-            pass
-
         for param_group in optimizer.param_groups:
             param_group["lr"] = learning_rate
         scheduler = torch.optim.lr_scheduler.SequentialLR(
@@ -147,7 +140,7 @@ if len(sys.argv) > 1 and (sys.argv[1] == "train" or sys.argv[1] == "extratrain")
 
             H = nmt(batch)
 
-            # H is average loss per token. Multiply by tokens to get total sum.
+            # Вземаме суматата като умножим по борй токени и получаваме сумата
             total_epoch_loss_sum += H.item() * batch_tokens
             total_epoch_tokens += batch_tokens
 
@@ -198,12 +191,11 @@ if len(sys.argv) > 1 and (sys.argv[1] == "train" or sys.argv[1] == "extratrain")
                         modelFileName + ".optim",
                     )
 
-        # End of epoch logging
         nmt.eval()
         val_perplexity = perplexity(nmt, devCorpus, batchSize)
         nmt.train()
 
-        # Calculate precise weighted average loss
+        # Смятаме средна претеглена загуба
         avg_epoch_loss = (
             total_epoch_loss_sum / total_epoch_tokens if total_epoch_tokens > 0 else 0.0
         )
@@ -248,6 +240,7 @@ if len(sys.argv) > 3 and sys.argv[1] == "perplexity":
 
     sourceTest = utils.readCorpus(sys.argv[2])
     targetTest = utils.readCorpus(sys.argv[3])
+    # Прилагаме BPE, ако е включено
     if use_bpe:
         codes = utils.loadBpeCodes(bpe_codes_file)
         sourceTest = utils.applyBpe(sourceTest, codes)
@@ -266,6 +259,7 @@ if len(sys.argv) > 3 and sys.argv[1] == "translate":
     words = list(word2ind)
 
     sourceTest = utils.readCorpus(sys.argv[2])
+    # Прилагаме BPE, ако е включено
     if use_bpe:
         codes = utils.loadBpeCodes(bpe_codes_file)
         sourceTest = utils.applyBpe(sourceTest, codes)
@@ -285,6 +279,7 @@ if len(sys.argv) > 3 and sys.argv[1] == "translate":
         r = nmt.generate(s)
         st = r.index(transTokenIdx)
         result = [words[i] for i in r[st + 1 : -1]]
+        # Прилагаме BPE, ако е включено
         if use_bpe:
             result = utils.decodeBpe(result)
         file.write(" ".join(result) + "\n")
@@ -296,6 +291,7 @@ if len(sys.argv) > 2 and sys.argv[1] == "generate":
     words = list(word2ind)
 
     test = sys.argv[2].split()
+    # Прилагаме BPE, ако е включено
     if use_bpe:
         codes = utils.loadBpeCodes(bpe_codes_file)
         test = utils.applyBpe([test], codes)[0]

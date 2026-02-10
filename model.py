@@ -195,7 +195,6 @@ class LanguageModel(nn.Module):
 
         # Позиционни емебедигни, първо проверяваме дали имаме кеш и трябва ли да ги смятаме
         if cache is None or cache[0] is None:
-            # Training or Initial Prompt: Standard PE (0 to seq_len)
             input = self.dropout1(self.pos_embed(E))
         else:
             # Генериране
@@ -244,49 +243,146 @@ class LanguageModel(nn.Module):
     def load(self, fileName):
         self.load_state_dict(torch.load(fileName))
 
+    def _reorder_cache(self, cache, indices):
+        # Пренарежда KV кеша според индексите.
+        return [
+            (k.index_select(0, indices), v.index_select(0, indices)) for k, v in cache
+        ]
+
+    def _greedy_search(self, seq, cache, last_logits, limit, device):
+        # Алчно или greedy декодиране: избира най-вероятния токен.
+        next_token = torch.argmax(last_logits, dim=-1).item()
+        seq.append(next_token)
+        if next_token == self.endTokenIdx:
+            return seq
+
+        for _ in range(limit):
+            X = torch.tensor([[seq[-1]]], dtype=torch.long, device=device)
+            #
+            logits, cache = self._forward_step(X, mask=None, cache=cache)
+            last_logits = logits[:, -1, :]
+            last_logits[0, [self.unkTokenIdx, self.padTokenIdx]] = -float("inf")
+            next_token = torch.argmax(last_logits, dim=-1).item()
+            seq.append(next_token)
+            if next_token == self.endTokenIdx:
+                break
+        return seq
+
+    def _beam_search(self, seq, cache, last_logits, limit, beam_width, device):
+        # Beam Search декодиране с нормализация по дължина.
+        base_len = len(seq)
+
+        def length_normalize(raw_score: float, total_len: int) -> float:
+            # Нормализираме по генерирана дължина
+            gen_len = max(1, total_len - base_len)
+            return raw_score / gen_len
+
+        # Вземеме вероятностите за последният предсказан токен
+        log_probs = torch.nn.functional.log_softmax(last_logits, dim=-1)
+        top_scores, top_indices = torch.topk(log_probs, beam_width, dim=-1)
+
+        # Инициализираме лъчите
+        beams = [
+            (seq + [top_indices[0, i].item()], top_scores[0, i].item())
+            for i in range(beam_width)
+        ]
+        # Разширяваме кеша
+        cache = [
+            (k.expand(beam_width, -1, -1, -1), v.expand(beam_width, -1, -1, -1))
+            for k, v in cache
+        ]
+        completed = []
+
+        for _ in range(limit):
+            # Бачваме за всички лъчи в едно, за да бъде операцията бърза
+            inputs = torch.tensor(
+                [[b[0][-1]] for b in beams], dtype=torch.long, device=device
+            )
+            # Forward pass за всички лъчи без маска, защото ние работим само с един токен и няма какво да гледаме напред
+            logits, cache = self._forward_step(inputs, mask=None, cache=cache)
+
+            # Изчисляваме вероятностите за следващия токен
+            next_lps = torch.nn.functional.log_softmax(logits[:, -1, :], dim=-1)
+            next_lps[:, [self.unkTokenIdx, self.padTokenIdx]] = -float("inf")
+
+            # Това са предишните оценки
+            beam_scores = torch.tensor([b[1] for b in beams], device=device).unsqueeze(
+                1
+            )
+            # Сумираме с текущи и flatten-ваме
+            scores = beam_scores + next_lps
+            flat = scores.flatten()
+            # От всички лъчи избираме тези с най-висока оценка
+            best_scores, best_indices = torch.topk(
+                flat, min(beam_width, flat.numel()), dim=0
+            )
+
+            # Тази функция ни дава за flatten-натия вектор кой лъч на кой токен съответства
+            beam_idx, token = torch.unravel_index(best_indices, scores.shape)
+
+            new_beams = []
+            keep_indices = []
+            # Обхождаме всички, които са с максимални оценки
+            for i in range(len(best_scores)):
+                b_idx = int(beam_idx[i].item())
+                t = int(token[i].item())
+                prev_seq, _ = beams[b_idx]
+                cand_seq = prev_seq + [t]
+                raw = float(best_scores[i].item())
+
+                if t == self.endTokenIdx:
+                    # Ако сме стигнали край, добавяме към завършените
+                    norm = length_normalize(raw, len(cand_seq))
+                    completed.append((cand_seq, raw, norm))
+                else:
+                    # В противен случай просто обновяваме beams
+                    new_beams.append((cand_seq, raw))
+                    keep_indices.append(b_idx)
+
+            # Ако няма нови лъчи приключваме
+            if not new_beams:
+                break
+            beams = new_beams
+
+            #  Пазим кеша само за лъчите, които не са завършени
+            if keep_indices:
+                idx_tensor = torch.tensor(keep_indices, device=device)
+                cache = self._reorder_cache(cache, idx_tensor)
+            # Ако имаме достатъчно завърешени изречения приключваме
+            if len(completed) >= beam_width:
+                break
+
+        if not completed:
+            completed = [(s, raw, length_normalize(raw, len(s))) for (s, raw) in beams]
+
+        # Сортиране с нормализация по дължина
+        completed.sort(key=lambda x: x[2], reverse=True)
+        return completed[0][0]
+
     @torch.no_grad()
-    def generate(self, source, limit=1000):
+    def generate(self, source, limit=1000, beam_width=4):
         self.eval()
         device = next(self.parameters()).device
         seq = source.copy()
 
-        # Задаваме начален кеш, който ще пазим за всички слоеве
-        # Това ще бъдат всички hidden state-ове, които имаме до момента изчислени, за да не преизчисляваме
+        # Задаваме начален кеш
         cache = [None] * len(self.layers)
+        last_logits = None
 
         if len(seq) > 0:
-            # Инициализираме си тензор с индексите на токените
+            # Смятаме за началната поредица от токени скритите състояния
             X = torch.tensor([seq], dtype=torch.long, device=device)
-            # Маската отново е аналогична на forward
-            seq_len = X.shape[1]
-            batch_mask = self.mask[:seq_len, :seq_len]
-            # Даваме кешът, който сме запазили като аргумент и получаваме новия
-            logits, cache = self._forward_step(X, mask=batch_mask, cache=cache)
-
-            # Предскзваме следващият токен, махайки unknown и pad токените
+            logits, cache = self._forward_step(
+                X, mask=self.mask[: X.shape[1], : X.shape[1]], cache=cache
+            )
             last_logits = logits[:, -1, :]
-            last_logits[0, [self.unkTokenIdx, self.padTokenIdx]] = -float("inf")
-            next_token = torch.argmax(last_logits, dim=-1).item()
+        else:
+            return seq
 
-            seq.append(next_token)
-            if next_token == self.endTokenIdx:
-                return seq
+        last_logits[0, [self.unkTokenIdx, self.padTokenIdx]] = -float("inf")
 
-        # След като вече имаме кеш за всички начални можем да продължим
-        for _ in range(limit):
-            # Input is just the last generated token
-            X = torch.tensor([[seq[-1]]], dtype=torch.long, device=device)
-
-            # Отново смятаме и актуализираме кеша
-            logits, cache = self._forward_step(X, mask=None, cache=cache)
-
-            last_logits = logits[:, -1, :]
-            last_logits[0, [self.unkTokenIdx, self.padTokenIdx]] = -float("inf")
-            # Аналогично на преди
-            next_token = torch.argmax(last_logits, dim=-1).item()
-            seq.append(next_token)
-
-            if next_token == self.endTokenIdx:
-                break
-
-        return seq
+        if beam_width == 1:
+            # При ширина на лъча 1, няма смисъл да използваме излишни изчисления като резултат ще е същия като алчния
+            return self._greedy_search(seq, cache, last_logits, limit, device)
+        else:
+            return self._beam_search(seq, cache, last_logits, limit, beam_width, device)

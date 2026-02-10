@@ -42,7 +42,7 @@ transToken = "<TRANS>"
 transTokenIdx = 4
 
 
-# BPE settings
+# BPE настройки
 use_bpe = True
 bpe_merges = 30000
 bpe_codes_file = "bpe_codes"
