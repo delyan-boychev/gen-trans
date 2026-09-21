@@ -4,10 +4,10 @@ Gen-Trans is a Bulgarian-to-English neural machine translation system built
 from scratch in PyTorch. It uses a decoder-only Transformer language model to
 generate an English translation after a Bulgarian source sequence.
 
-This repository contains my course project for **Searching for and Retrieval
-of Information: Application of Deep Machine Learning**, taught by **Prof.
-Stoyan Mihov** during the **Winter 2025/2026 semester** at Sofia University's
-Faculty of Mathematics and Informatics.
+This repository contains my coursework in **Information Search and Retrieval:
+Application of Deep Learning**, taught by **Prof. Stoyan Mihov** during the
+**Winter 2025/2026 semester** at Sofia University's Faculty of Mathematics and
+Informatics.
 
 ## Highlights
 
